@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Resume Generator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .controls label {
+            margin-right: 10px;
+        }
+
+        .controls input {
+            margin: 5px 10px;
+        }
+
+        #resume-preview {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .section h3 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .input-field {
+            display: block;
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: block;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        #qr-code {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .dynamic-list {
+            margin-top: 10px;
+        }
+
+        .dynamic-list p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Resume Generator</h1>
+
+        <!-- Controls for Customization -->
+        <div class="controls">
+            <label for="fontSize">Font Size:</label>
+            <input type="range" id="fontSize" min="10" max="30" value="16">
+
+            <label for="fontColor">Font Color:</label>
+            <input type="color" id="fontColor" value="#333333">
+
+            <label for="bgColor">Background Color:</label>
+            <input type="color" id="bgColor" value="#ffffff">
+        </div>
+
+        <!-- Resume Preview -->
+        <div id="resume-preview">
+            <h2 id="name">Your Name</h2>
+            <p id="contact-info">Email: your.email@example.com | Phone: +1234567890</p>
+            <p id="address">Your Address</p>
+
+            <div class="section" id="experience-section">
+                <h3>Experience</h3>
+                <div id="experience-list" class="dynamic-list"></div>
+            </div>
+
+            <div class="section" id="education-section">
+                <h3>Education</h3>
+                <div id="education-list" class="dynamic-list"></div>
+            </div>
+
+            <div class="section" id="skills-section">
+                <h3>Skills</h3>
+                <div id="skills-list" class="dynamic-list"></div>
+            </div>
+
+            <div id="qr-code"></div>
+        </div>
+
+        <!-- Input Fields -->
+        <div class="section">
+            <h3>Personal Information</h3>
+            <input type="text" class="input-field" id="input-name" placeholder="Enter your name">
+            <input type="text" class="input-field" id="input-email" placeholder="Enter your email">
+            <input type="text" class="input-field" id="input-phone" placeholder="Enter your phone number">
+            <input type="text" class="input-field" id="input-address" placeholder="Enter your address">
+        </div>
+
+        <div class="section">
+            <h3>Experience</h3>
+            <input type="text" class="input-field" id="input-experience" placeholder="Enter an experience">
+            <button class="button" onclick="addExperience()">Add Experience</button>
+        </div>
+
+        <div class="section">
+            <h3>Education</h3>
+            <input type="text" class="input-field" id="input-education" placeholder="Enter education details">
+            <button class="button" onclick="addEducation()">Add Education</button>
+        </div>
+
+        <div class="section">
+            <h3>Skills</h3>
+            <input type="text" class="input-field" id="input-skill" placeholder="Enter a skill">
+            <button class="button" onclick="addSkill()">Add Skill</button>
+        </div>
+
+        <button class="button" onclick="generatePDF()">Generate PDF</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.72/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.72/vfs_fonts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.min.js"></script>
+    <script>
+        const fontSizeInput = document.getElementById('fontSize');
+        const fontColorInput = document.getElementById('fontColor');
+        const bgColorInput = document.getElementById('bgColor');
+        const resumePreview = document.getElementById('resume-preview');
+        const nameField = document.getElementById('name');
+        const contactInfoField = document.getElementById('contact-info');
+        const addressField = document.getElementById('address');
+        const qrCodeDiv = document.getElementById('qr-code');
+
+        const nameInput = document.getElementById('input-name');
+        const emailInput = document.getElementById('input-email');
+        const phoneInput = document.getElementById('input-phone');
+        const addressInput = document.getElementById('input-address');
+
+        const experienceList = document.getElementById('experience-list');
+        const educationList = document.getElementById('education-list');
+        const skillsList = document.getElementById('skills-list');
+
+        const qrCode = new QRCodeStyling({
+            width: 150,
+            height: 150,
+            data: "https://example.com",
+            dotsOptions: {
+                color: "#333",
+                type: "square"
+            }
+        });
+
+        qrCode.append(qrCodeDiv);
+
+        nameInput.addEventListener('input', () => {
+            nameField.textContent = nameInput.value;
+        });
+
+        emailInput.addEventListener('input', updateContactInfo);
+        phoneInput.addEventListener('input', updateContactInfo);
+        addressInput.addEventListener('input', () => {
+            addressField.textContent = addressInput.value;
+        });
+
+        fontSizeInput.addEventListener('input', () => {
+            resumePreview.style.fontSize = fontSizeInput.value + 'px';
+        });
+
+        fontColorInput.addEventListener('input', () => {
+            resumePreview.style.color = fontColorInput.value;
+        });
+
+        bgColorInput.addEventListener('input', () => {
+            resumePreview.style.backgroundColor = bgColorInput.value;
+        });
+
+        function updateContactInfo() {
+            contactInfoField.textContent = `Email: ${emailInput.value} | Phone: ${phoneInput.value}`;
+            qrCode.update({ data: `mailto:${emailInput.value}?subject=Contact` });
+        }
+
+        function addExperience() {
+            const input = document.getElementById('input-experience');
+            if (input.value) {
+                const p = document.createElement('p');
+                p.textContent = input.value;
+                experienceList.appendChild(p);
+                input.value = '';
+            }
+        }
+
+        function addEducation() {
+            const input = document.getElementById('input-education');
+            if (input.value) {
+                const p = document.createElement('p');
+                p.textContent = input.value;
+                educationList.appendChild(p);
+                input.value = '';
+            }
+        }
+
+        function addSkill() {
+            const input = document.getElementById('input-skill');
+            if (input.value) {
+                const p = document.createElement('p');
+                p.textContent = input.value;
+                skillsList.appendChild(p);
+                input.value = '';
+            }
+        }
+
+        function generatePDF() {
+            const experiences = Array.from(experienceList.querySelectorAll('p')).map(p => p.textContent).join('\n');
+            const educations = Array.from(educationList.querySelectorAll('p')).map(p => p.textContent).join('\n');
+            const skills = Array.from(skillsList.querySelectorAll('p')).map(p => p.textContent).join('\n');
+
+            const docDefinition = {
+                content: [
+                    { text: nameField.textContent, style: 'header' },
+                    { text: contactInfoField.textContent, style: 'contactInfo' },
+                    { text: addressField.textContent, style: 'address' },
+                    { text: 'Experience', style: 'subheader' },
+                    experiences,
+                    { text: 'Education', style: 'subheader' },
+                    educations,
+                    { text: 'Skills', style: 'subheader' },
+                    skills,
+                ],
+                pageSize: 'A4',
+                pageMargins: [40, 60, 40, 60],
+                styles: {
+                    header: { fontSize: 18, bold: true, color: fontColorInput.value },
+                    subheader: { fontSize: 16, bold: true, margin: [0, 10, 0, 10], color: fontColorInput.value },
+                    contactInfo: { fontSize: 14, margin: [0, 10, 0, 10], color: fontColorInput.value },
+                    address: { fontSize: 14, margin: [0, 10, 0, 10], color: fontColorInput.value }
+                },
+                background: [
+                    {
+                        canvas: [
+                            {
+                                type: 'rect',
+                                x: 0, y: 0,
+                                w: 595, h: 842,  // A4 paper size
+                                color: '#87CEEB' // Light blue background
+                            }
+                        ]
+                    }
+                ]
+            };
+            pdfMake.createPdf(docDefinition).download('resume.pdf');
+        }
+    </script>
+</body>
+</html>
